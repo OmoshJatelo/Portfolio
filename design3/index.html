@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRIAD — Dev Collective</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0a0a0f;
+    --bone: #f2efe8;
+    --electric: #00ff88;
+    --acid: #cfff04;
+    --ghost: rgba(242,239,232,0.06);
+    --line: rgba(242,239,232,0.12);
+    --syne: 'Syne', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--bone);
+    font-family: var(--syne);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--electric);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--electric);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.3s ease;
+    mix-blend-mode: difference;
+    opacity: 0.6;
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 3rem;
+    border-bottom: 1px solid var(--line);
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+  }
+  .nav-logo {
+    font-size: 1.1rem; font-weight: 800; letter-spacing: 0.3em;
+    color: var(--bone); text-decoration: none;
+  }
+  .nav-logo span { color: var(--electric); }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.15em;
+    color: rgba(242,239,232,0.5); text-decoration: none; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--electric); }
+
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 3rem 5rem;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridDrift 20s linear infinite;
+  }
+  @keyframes gridDrift {
+    from { background-position: 0 0; }
+    to { background-position: 60px 60px; }
+  }
+
+  .hero-noise {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,255,136,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.2em;
+    color: var(--electric); text-transform: uppercase;
+    margin-bottom: 2rem;
+    opacity: 0; animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-headline {
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    font-weight: 800; line-height: 0.92;
+    letter-spacing: -0.03em;
+    opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero-headline em {
+    font-family: var(--serif); font-style: italic;
+    color: var(--electric); font-weight: 400;
+  }
+
+  .hero-sub {
+    margin-top: 2.5rem;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
+  }
+  .hero-desc {
+    font-family: var(--mono); font-size: 0.85rem; line-height: 1.7;
+    color: rgba(242,239,232,0.55); max-width: 360px;
+  }
+  .hero-cta {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--electric);
+    color: var(--ink);
+    padding: 1rem 2rem; border: none; cursor: none;
+    font-family: var(--syne); font-size: 0.85rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .hero-cta:hover { background: var(--acid); transform: translateY(-3px); }
+  .cta-arrow { font-size: 1.2rem; transition: transform 0.2s; }
+  .hero-cta:hover .cta-arrow { transform: translateX(4px); }
+
+  .scroll-indicator {
+    position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em;
+    color: rgba(242,239,232,0.3); text-transform: uppercase;
+    opacity: 0; animation: fadeUp 1s 1s forwards;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(var(--electric), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.3); }
+  }
+
+  .marquee-strip {
+    overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 1rem 0; background: var(--ghost);
+  }
+  .marquee-inner {
+    display: flex; gap: 4rem; white-space: nowrap;
+    animation: marquee 18s linear infinite;
+  }
+  .marquee-item {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.2em;
+    text-transform: uppercase; color: rgba(242,239,232,0.4);
+    display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0;
+  }
+  .marquee-dot { width: 4px; height: 4px; background: var(--electric); border-radius: 50%; }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  section { padding: 7rem 3rem; }
+  .section-label {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--electric); margin-bottom: 1rem;
+  }
+
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6rem;
+    align-items: center; margin-top: 4rem;
+  }
+  .about-number {
+    font-size: 9rem; font-weight: 800; line-height: 1;
+    color: rgba(242,239,232,0.04); letter-spacing: -0.05em; margin-bottom: -2rem;
+  }
+  .about-title {
+    font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800;
+    line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 2rem;
+  }
+  .about-title em { font-family: var(--serif); font-style: italic; color: var(--electric); font-weight: 400; }
+  .about-text {
+    font-family: var(--mono); font-size: 0.85rem; line-height: 1.9;
+    color: rgba(242,239,232,0.6); margin-bottom: 2rem;
+  }
+  .stats-row { display: flex; gap: 3rem; margin-top: 3rem; }
+  .stat-item { border-top: 1px solid var(--line); padding-top: 1.5rem; }
+  .stat-num { font-size: 2.5rem; font-weight: 800; color: var(--bone); letter-spacing: -0.03em; }
+  .stat-num span { color: var(--electric); }
+  .stat-label {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(242,239,232,0.4);
+  }
+
+  .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 4rem; }
+  .team-card {
+    position: relative; overflow: hidden;
+    background: var(--ghost); border: 1px solid var(--line);
+    padding: 3rem 2.5rem; cursor: none; transition: border-color 0.3s;
+  }
+  .team-card:hover { border-color: rgba(0,255,136,0.4); }
+  .team-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,255,136,0.08) 0%, transparent 60%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .team-card:hover::before { opacity: 1; }
+  .card-num { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em; color: rgba(242,239,232,0.25); margin-bottom: 2rem; }
+  .card-avatar { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 2rem; border: 2px solid var(--line); overflow: hidden; }
+  .card-avatar-inner { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; color: var(--ink); }
+  .av-1 { background: linear-gradient(135deg, #00ff88, #00c4ff); }
+  .av-2 { background: linear-gradient(135deg, #cfff04, #ff6b35); }
+  .av-3 { background: linear-gradient(135deg, #b44dff, #ff6b9d); }
+  .card-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; letter-spacing: -0.02em; }
+  .card-role { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--electric); margin-bottom: 1.5rem; }
+  .card-bio { font-family: var(--mono); font-size: 0.78rem; line-height: 1.8; color: rgba(242,239,232,0.5); margin-bottom: 2rem; }
+  .card-skills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .skill-pill {
+    font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.35rem 0.8rem; border: 1px solid var(--line); color: rgba(242,239,232,0.5);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .team-card:hover .skill-pill { border-color: rgba(0,255,136,0.3); color: rgba(242,239,232,0.8); }
+
+  .projects-grid { display: grid; gap: 2px; margin-top: 4rem; }
+  .project-row {
+    display: grid; grid-template-columns: 80px 1fr 200px 160px;
+    align-items: center; gap: 3rem;
+    padding: 2rem 0; border-bottom: 1px solid var(--line);
+    cursor: none; transition: padding-left 0.3s; position: relative;
+  }
+  .project-row::after { content: ''; position: absolute; inset: 0; background: var(--ghost); opacity: 0; transition: opacity 0.3s; }
+  .project-row:hover { padding-left: 1rem; }
+  .project-row:hover::after { opacity: 1; }
+  .proj-num { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; color: rgba(242,239,232,0.2); }
+  .proj-info { position: relative; z-index: 1; }
+  .proj-name { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+  .proj-desc { font-family: var(--mono); font-size: 0.75rem; line-height: 1.6; color: rgba(242,239,232,0.45); }
+  .proj-stack { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(242,239,232,0.35); position: relative; z-index: 1; }
+  .proj-tag { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.4rem 1rem; border: 1px solid var(--electric); color: var(--electric); text-align: center; position: relative; z-index: 1; }
+
+  .skills-section { background: var(--ghost); border-top: 1px solid var(--line); }
+  .skills-title { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4rem; }
+  .skills-title em { font-family: var(--serif); font-style: italic; color: var(--electric); font-weight: 400; }
+  .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .skill-bar-top { display: flex; justify-content: space-between; margin-bottom: 0.6rem; }
+  .skill-name { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .skill-pct { font-family: var(--mono); font-size: 0.75rem; color: var(--electric); }
+  .skill-track { height: 2px; background: var(--line); overflow: hidden; }
+  .skill-fill { height: 100%; background: var(--electric); transform: scaleX(0); transform-origin: left; transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  .skill-fill.animated { transform: scaleX(1); }
+
+  .process-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 4rem; }
+  .process-card { padding: 2.5rem 2rem; border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .process-card::before { content: attr(data-step); position: absolute; top: -1rem; right: 1rem; font-size: 6rem; font-weight: 800; color: rgba(242,239,232,0.03); line-height: 1; }
+  .process-icon { font-size: 1.5rem; margin-bottom: 1.5rem; }
+  .process-name { font-size: 1rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -0.01em; }
+  .process-desc { font-family: var(--mono); font-size: 0.75rem; line-height: 1.8; color: rgba(242,239,232,0.45); }
+
+  .contact-section {
+    min-height: 60vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    border-top: 1px solid var(--line); position: relative; overflow: hidden;
+  }
+  .contact-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,255,136,0.05) 0%, transparent 70%); }
+  .contact-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--electric); margin-bottom: 1.5rem; }
+  .contact-title { font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin-bottom: 3rem; }
+  .contact-title em { font-family: var(--serif); font-style: italic; color: var(--electric); font-weight: 400; }
+  .contact-links { display: flex; gap: 1.5rem; position: relative; z-index: 1; flex-wrap: wrap; justify-content: center; }
+  .contact-link {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 1rem 2rem; border: 1px solid var(--line); color: rgba(242,239,232,0.6);
+    text-decoration: none; transition: all 0.2s; cursor: pointer;
+  }
+  .contact-link:hover { border-color: var(--electric); color: var(--electric); }
+  .contact-link.primary { background: var(--electric); border-color: var(--electric); color: var(--ink); font-weight: 700; }
+  .contact-link.primary:hover { background: var(--acid); border-color: var(--acid); }
+
+  footer { padding: 2rem 3rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .footer-logo { font-size: 0.85rem; font-weight: 800; letter-spacing: 0.2em; }
+  .footer-logo span { color: var(--electric); }
+  .footer-copy { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; color: rgba(242,239,232,0.3); text-transform: uppercase; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 0 1.5rem 4rem; }
+    section { padding: 4rem 1.5rem; }
+    .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .team-grid { grid-template-columns: 1fr; }
+    .process-grid { grid-template-columns: 1fr 1fr; }
+    .project-row { grid-template-columns: 1fr; gap: 0.75rem; }
+    .proj-tag { width: fit-content; }
+    .skills-grid { grid-template-columns: 1fr; }
+    .contact-links { flex-direction: column; align-items: center; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <a class="nav-logo" href="#">TRIAD<span>.</span></a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#team">Team</a></li>
+    <li><a href="#projects">Work</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-noise"></div>
+  <div style="position:relative;z-index:1">
+    <p class="hero-tag">// Three minds. Infinite solutions. — Est. 2024</p>
+    <h1 class="hero-headline">
+      We don't just<br>
+      build software—<br>
+      we <em>engineer</em><br>
+      the future.
+    </h1>
+    <div class="hero-sub">
+      <p class="hero-desc">A trio of elite developers solving real-world problems through precision engineering, creative thinking, and obsessive craftsmanship.</p>
+      <a class="hero-cta" href="#projects">Explore Our Work <span class="cta-arrow">→</span></a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<div class="marquee-strip">
+  <div class="marquee-inner">
+    <span class="marquee-item"><span class="marquee-dot"></span>Full-Stack Development</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>System Architecture</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>AI &amp; Machine Learning</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Cloud Infrastructure</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Mobile Engineering</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Real-World Impact</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Full-Stack Development</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>System Architecture</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>AI &amp; Machine Learning</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Cloud Infrastructure</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Mobile Engineering</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Real-World Impact</span>
+  </div>
+</div>
+
+<section id="about">
+  <p class="section-label reveal">// 01 — About us</p>
+  <div class="about-grid">
+    <div>
+      <div class="about-number reveal">03</div>
+      <h2 class="about-title reveal">Built to solve <em>hard</em> problems.</h2>
+      <p class="about-text reveal">We're not your average dev shop. TRIAD was born from a shared obsession: turning complex, unsolved problems into elegant, scalable software. We operate at the intersection of deep engineering, user empathy, and relentless iteration.</p>
+      <p class="about-text reveal">Every project we take on is an opportunity to push further — beyond the obvious solution, beyond the MVP, into something that truly moves the needle.</p>
+      <div class="stats-row">
+        <div class="stat-item reveal reveal-delay-1">
+          <div class="stat-num">20<span>+</span></div>
+          <div class="stat-label">Projects Shipped</div>
+        </div>
+        <div class="stat-item reveal reveal-delay-2">
+          <div class="stat-num">3<span>yrs</span></div>
+          <div class="stat-label">Combined Xp.</div>
+        </div>
+        <div class="stat-item reveal reveal-delay-3">
+          <div class="stat-num">100<span>%</span></div>
+          <div class="stat-label">Client Satisfaction</div>
+        </div>
+      </div>
+    </div>
+    <div style="position:relative">
+      <div style="border:1px solid rgba(0,255,136,0.2);padding:3rem;position:relative;overflow:hidden;" class="reveal">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border:1px solid rgba(0,255,136,0.15);border-radius:50%;"></div>
+        <div style="position:absolute;top:10px;right:10px;width:60px;height:60px;border:1px solid rgba(0,255,136,0.1);border-radius:50%;"></div>
+        <p style="font-family:var(--mono);font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--electric);margin-bottom:1.5rem;">Our philosophy</p>
+        <blockquote style="font-family:var(--serif);font-style:italic;font-size:1.6rem;line-height:1.4;color:var(--bone);margin-bottom:2rem;">"The best code is the kind that makes life undeniably better for the people who use it."</blockquote>
+        <div style="border-top:1px solid var(--line);padding-top:1.5rem;font-family:var(--mono);font-size:0.72rem;color:rgba(242,239,232,0.4);letter-spacing:0.1em;">— TRIAD Collective, 2024</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="team" style="background:rgba(0,255,136,0.02);border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <p class="section-label reveal">// 02 — The team</p>
+  <h2 style="font-size:clamp(2rem,4vw,3.5rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem;" class="reveal">Three builders.<br>One <em style="font-family:var(--serif);font-style:italic;color:var(--electric);font-weight:400;">vision.</em></h2>
+  <div class="team-grid">
+    <div class="team-card reveal" id="card1">
+      <p class="card-num">01 / 03</p>
+      <div class="card-avatar"><div class="card-avatar-inner av-1">AK</div></div>
+      <h3 class="card-name">Alex Kariuki</h3>
+      <p class="card-role">Lead Engineer · Full-Stack</p>
+      <p class="card-bio">Architect of systems that scale. Alex specializes in designing backend infrastructure that handles real-world load — from APIs to distributed microservices.</p>
+      <div class="card-skills">
+        <span class="skill-pill">Node.js</span><span class="skill-pill">Python</span><span class="skill-pill">PostgreSQL</span><span class="skill-pill">AWS</span><span class="skill-pill">Docker</span>
+      </div>
+    </div>
+    <div class="team-card reveal reveal-delay-1" id="card2">
+      <p class="card-num">02 / 03</p>
+      <div class="card-avatar"><div class="card-avatar-inner av-2">JM</div></div>
+      <h3 class="card-name">Jordan Mwangi</h3>
+      <p class="card-role">Frontend Architect · UI/UX</p>
+      <p class="card-bio">Jordan transforms wireframes into experiences. With a sharp eye for interaction design and animation, every interface is crafted to feel inevitable.</p>
+      <div class="card-skills">
+        <span class="skill-pill">React</span><span class="skill-pill">TypeScript</span><span class="skill-pill">Figma</span><span class="skill-pill">Three.js</span><span class="skill-pill">CSS</span>
+      </div>
+    </div>
+    <div class="team-card reveal reveal-delay-2" id="card3">
+      <p class="card-num">03 / 03</p>
+      <div class="card-avatar"><div class="card-avatar-inner av-3">SN</div></div>
+      <h3 class="card-name">Sasha Ndegwa</h3>
+      <p class="card-role">ML Engineer · Data Systems</p>
+      <p class="card-bio">Sasha builds intelligence into products. From predictive models to NLP pipelines, she makes software smarter and more responsive to human needs.</p>
+      <div class="card-skills">
+        <span class="skill-pill">PyTorch</span><span class="skill-pill">FastAPI</span><span class="skill-pill">React Native</span><span class="skill-pill">Firebase</span><span class="skill-pill">TensorFlow</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <p class="section-label reveal">// 03 — Selected work</p>
+  <h2 style="font-size:clamp(2rem,4vw,3.5rem);font-weight:800;letter-spacing:-0.02em;" class="reveal">Problems <em style="font-family:var(--serif);font-style:italic;color:var(--electric);font-weight:400;">solved.</em></h2>
+  <div class="projects-grid">
+    <div class="project-row reveal"><span class="proj-num">001</span><div class="proj-info"><h3 class="proj-name">AgriConnect</h3><p class="proj-desc">AI-powered marketplace connecting smallholder farmers to fair-price buyers across East Africa. Reduced food waste by 40%.</p></div><p class="proj-stack">React · FastAPI · ML · PostgreSQL</p><span class="proj-tag">AgriTech</span></div>
+    <div class="project-row reveal reveal-delay-1"><span class="proj-num">002</span><div class="proj-info"><h3 class="proj-name">MediRoute</h3><p class="proj-desc">Emergency logistics platform optimizing ambulance dispatch using real-time traffic and hospital capacity data.</p></div><p class="proj-stack">Node.js · Maps API · AWS · React</p><span class="proj-tag">HealthTech</span></div>
+    <div class="project-row reveal reveal-delay-2"><span class="proj-num">003</span><div class="proj-info"><h3 class="proj-name">EduPulse</h3><p class="proj-desc">Adaptive learning platform for underserved schools — personalizes curriculum using student performance analytics.</p></div><p class="proj-stack">React Native · Python · Firebase · TensorFlow</p><span class="proj-tag">EdTech</span></div>
+    <div class="project-row reveal reveal-delay-3"><span class="proj-num">004</span><div class="proj-info"><h3 class="proj-name">Ledgr</h3><p class="proj-desc">Lightweight accounting and invoicing tool for African SMEs, with M-Pesa integration and multi-currency support.</p></div><p class="proj-stack">TypeScript · Next.js · Stripe · Supabase</p><span class="proj-tag">FinTech</span></div>
+  </div>
+</section>
+
+<section class="skills-section">
+  <p class="section-label reveal">// 04 — Capabilities</p>
+  <h2 class="skills-title reveal">Built on a <em>deep</em><br>technical stack.</h2>
+  <div class="skills-grid" id="skillsGrid">
+    <div class="skill-bar reveal"><div class="skill-bar-top"><span class="skill-name">Backend Systems</span><span class="skill-pct">95%</span></div><div class="skill-track"><div class="skill-fill" style="width:95%"></div></div></div>
+    <div class="skill-bar reveal reveal-delay-1"><div class="skill-bar-top"><span class="skill-name">Frontend / UI</span><span class="skill-pct">90%</span></div><div class="skill-track"><div class="skill-fill" style="width:90%"></div></div></div>
+    <div class="skill-bar reveal reveal-delay-2"><div class="skill-bar-top"><span class="skill-name">Machine Learning</span><span class="skill-pct">85%</span></div><div class="skill-track"><div class="skill-fill" style="width:85%"></div></div></div>
+    <div class="skill-bar reveal reveal-delay-3"><div class="skill-bar-top"><span class="skill-name">Cloud &amp; DevOps</span><span class="skill-pct">88%</span></div><div class="skill-track"><div class="skill-fill" style="width:88%"></div></div></div>
+    <div class="skill-bar reveal"><div class="skill-bar-top"><span class="skill-name">Mobile Development</span><span class="skill-pct">80%</span></div><div class="skill-track"><div class="skill-fill" style="width:80%"></div></div></div>
+    <div class="skill-bar reveal reveal-delay-1"><div class="skill-bar-top"><span class="skill-name">System Design</span><span class="skill-pct">92%</span></div><div class="skill-track"><div class="skill-fill" style="width:92%"></div></div></div>
+  </div>
+</section>
+
+<section id="process" style="border-top:1px solid var(--line);">
+  <p class="section-label reveal">// 05 — Our process</p>
+  <h2 style="font-size:clamp(2rem,4vw,3.5rem);font-weight:800;letter-spacing:-0.02em;" class="reveal">How we <em style="font-family:var(--serif);font-style:italic;color:var(--electric);font-weight:400;">ship.</em></h2>
+  <div class="process-grid">
+    <div class="process-card reveal" data-step="01"><div class="process-icon">◉</div><h3 class="process-name">Discover</h3><p class="process-desc">We dig into your domain, users, and constraints before touching code. The right problem definition is half the solution.</p></div>
+    <div class="process-card reveal reveal-delay-1" data-step="02"><div class="process-icon">◈</div><h3 class="process-name">Architect</h3><p class="process-desc">System design, data models, tech choices. We build the blueprint so there are no surprises at scale.</p></div>
+    <div class="process-card reveal reveal-delay-2" data-step="03"><div class="process-icon">◆</div><h3 class="process-name">Build &amp; Iterate</h3><p class="process-desc">Rapid, tested, production-ready sprints. We ship working software early and iterate hard based on real feedback.</p></div>
+    <div class="process-card reveal reveal-delay-3" data-step="04"><div class="process-icon">◎</div><h3 class="process-name">Launch &amp; Own</h3><p class="process-desc">Deployment, monitoring, optimization. We stay accountable long after the launch — because real impact takes time.</p></div>
+  </div>
+</section>
+
+<section class="contact-section" id="contact">
+  <div class="contact-bg"></div>
+  <p class="contact-label reveal">// 06 — Let's talk</p>
+  <h2 class="contact-title reveal">Got a problem<br>worth <em>solving?</em></h2>
+  <div class="contact-links reveal">
+    <a class="contact-link primary" href="mailto:hello@triaddev.io">hello@triaddev.io</a>
+    <a class="contact-link" href="#">GitHub</a>
+    <a class="contact-link" href="#">LinkedIn</a>
+    <a class="contact-link" href="#">Twitter / X</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">TRIAD<span>.</span></div>
+  <div class="footer-copy">© 2024 Triad Collective — Building what matters.</div>
+</footer>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = 'translate(' + (mx-6) + 'px,' + (my-6) + 'px)';
+  });
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.transform = 'translate(' + (rx-18) + 'px,' + (ry-18) + 'px)';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('.team-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(1) + '%');
+      card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(1) + '%');
+    });
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        entry.target.querySelectorAll('.skill-fill').forEach((f, i) => {
+          setTimeout(() => f.classList.add('animated'), i * 150 + 100);
+        });
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  const skillObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      document.querySelectorAll('.skill-fill').forEach((f, i) => setTimeout(() => f.classList.add('animated'), i * 150));
+    }
+  }, { threshold: 0.3 });
+  const sg = document.getElementById('skillsGrid');
+  if (sg) skillObs.observe(sg);
+</script>
+</body>
+</html>
